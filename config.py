@@ -13,9 +13,14 @@
 # Change the argument to True to still load settings configured via autoconfig.yml
 config.load_autoconfig(False)
 
-# Automatically start playing `<video>` elements.
+# Always restore open sites when qutebrowser is reopened. Without this
+# option set, `:wq` (`:quit --save`) needs to be used to save open tabs
+# (and restore them), while quitting qutebrowser in any other way will
+# not save/restore the session. By default, this will save to the
+# session which was last loaded. This behavior can be customized via the
+# `session.default_name` setting.
 # Type: Bool
-c.content.autoplay = False
+c.auto_save.session = True
 
 # Which cookies to accept. With QtWebEngine, this setting also controls
 # other features with tracking capabilities similar to those of cookies;
@@ -102,6 +107,22 @@ config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}) AppleWebKit/{w
 # Type: FormatString
 config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:90.0) Gecko/20100101 Firefox/90.0', 'https://accounts.google.com/*')
 
+# User agent to send.  The following placeholders are defined:  *
+# `{os_info}`: Something like "X11; Linux x86_64". * `{webkit_version}`:
+# The underlying WebKit version (set to a fixed value   with
+# QtWebEngine). * `{qt_key}`: "Qt" for QtWebKit, "QtWebEngine" for
+# QtWebEngine. * `{qt_version}`: The underlying Qt version. *
+# `{upstream_browser_key}`: "Version" for QtWebKit, "Chrome" for
+# QtWebEngine. * `{upstream_browser_version}`: The corresponding
+# Safari/Chrome version. * `{qutebrowser_version}`: The currently
+# running qutebrowser version.  The default value is equal to the
+# unchanged user agent of QtWebKit/QtWebEngine.  Note that the value
+# read from JavaScript is always the global value. With QtWebEngine
+# between 5.12 and 5.14 (inclusive), changing the value exposed to
+# JavaScript requires a restart.
+# Type: FormatString
+config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99 Safari/537.36', 'https://*.slack.com/*')
+
 # Load images automatically in web pages.
 # Type: Bool
 config.set('content.images', True, 'chrome-devtools://*')
@@ -128,44 +149,25 @@ config.set('content.javascript.enabled', True, 'qute://*/*')
 
 # Allow locally loaded documents to access remote URLs.
 # Type: Bool
-config.set('content.local_content_can_access_remote_urls', True, 'file:///home/t/.local/share/qutebrowser/userscripts/*')
+config.set('content.local_content_can_access_remote_urls', True, 'file:///C:/Users/johnsog/AppData/Roaming/qutebrowser/data/userscripts/*')
 
 # Allow locally loaded documents to access other local URLs.
 # Type: Bool
-config.set('content.local_content_can_access_file_urls', False, 'file:///home/t/.local/share/qutebrowser/userscripts/*')
+config.set('content.local_content_can_access_file_urls', False, 'file:///C:/Users/johnsog/AppData/Roaming/qutebrowser/data/userscripts/*')
+
+# Editor (and arguments) to use for the `edit-*` commands. The following
+# placeholders are defined:  * `{file}`: Filename of the file to be
+# edited. * `{line}`: Line in which the caret is found in the text. *
+# `{column}`: Column in which the caret is found in the text. *
+# `{line0}`: Same as `{line}`, but starting from index 0. * `{column0}`:
+# Same as `{column}`, but starting from index 0.
+# Type: ShellCommand
+c.editor.command = ['gvim', '-f', '{file}', '-c', 'normal {line}G{column0}l']
 
 # Enable smooth scrolling for web pages. Note smooth scrolling does not
 # work with the `:scroll-px` command.
 # Type: Bool
 c.scrolling.smooth = True
-
-# How to behave when the last tab is closed. If the
-# `tabs.tabs_are_windows` setting is set, this is ignored and the
-# behavior is always identical to the `close` value.
-# Type: String
-# Valid values:
-#   - ignore: Don't do anything.
-#   - blank: Load a blank page.
-#   - startpage: Load the start page.
-#   - default-page: Load the default page.
-#   - close: Close the window.
-c.tabs.last_close = 'startpage'
-
-# Page to open if :open -t/-b/-w is used without URL. Use `about:blank`
-# for a blank page.
-# Type: FuzzyUrl
-c.url.default_page = 'https://google.com/'
-
-# URL segments where `:navigate increment/decrement` will search for a
-# number.
-# Type: FlagList
-# Valid values:
-#   - host
-#   - port
-#   - path
-#   - query
-#   - anchor
-c.url.incdec_segments = ['path', 'query']
 
 # Search engines which can be used via the address bar.  Maps a search
 # engine name (such as `DEFAULT`, or `ddg`) to a URL with a `{}`
@@ -190,7 +192,7 @@ c.url.searchengines = {'DEFAULT': 'https://google.com/search?q={}'}
 
 # Page(s) to open at the start.
 # Type: List of FuzzyUrl, or FuzzyUrl
-c.url.start_pages = 'Youtube.com'
+c.url.start_pages = 'https://start.duckduckgo.com'
 
 # Value to use for `prefers-color-scheme:` for websites. The "light"
 # value is only available with QtWebEngine 5.15.2+. On older versions,
@@ -202,7 +204,7 @@ c.url.start_pages = 'Youtube.com'
 #   - auto: Use the system-wide color scheme setting.
 #   - light: Force a light theme.
 #   - dark: Force a dark theme.
-c.colors.webpage.preferred_color_scheme = 'dark'
+c.colors.webpage.preferred_color_scheme = 'light'
 
 # Render all web contents using a dark theme. Example configurations
 # from Chromium's `chrome://flags`:  - "With simple HSL/CIELAB/RGB-based
@@ -217,27 +219,6 @@ c.colors.webpage.preferred_color_scheme = 'dark'
 # `colors.webpage.darkmode.increase_text_contrast` (QtWebEngine 6.3+)
 # Type: Bool
 c.colors.webpage.darkmode.enabled = False
-
-# Which algorithm to use for modifying how colors are rendered with
-# darkmode. The `lightness-cielab` value was added with QtWebEngine 5.14
-# and is treated like `lightness-hsl` with older QtWebEngine versions.
-# Type: String
-# Valid values:
-#   - lightness-cielab: Modify colors by converting them to CIELAB color space and inverting the L value. Not available with Qt < 5.14.
-#   - lightness-hsl: Modify colors by converting them to the HSL color space and inverting the lightness (i.e. the "L" in HSL).
-#   - brightness-rgb: Modify colors by subtracting each of r, g, and b from their maximum value.
-c.colors.webpage.darkmode.algorithm = 'lightness-cielab'
-
-# Which images to apply dark mode to. With QtWebEngine 5.15.0, this
-# setting can cause frequent renderer process crashes due to a
-# https://codereview.qt-project.org/c/qt/qtwebengine-
-# chromium/+/304211[bug in Qt].
-# Type: String
-# Valid values:
-#   - always: Apply dark mode filter to all images.
-#   - never: Never apply dark mode filter to any images.
-#   - smart: Apply dark mode based on image content. Not available with Qt 5.15.0.
-c.colors.webpage.darkmode.policy.images = 'never'
 
 # Which pages to apply dark mode to. The underlying Chromium setting has
 # been removed in QtWebEngine 5.15.3, thus this setting is ignored
